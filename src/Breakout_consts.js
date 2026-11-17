@@ -14,13 +14,13 @@ export const PADDLE = {
 export const BALL = {
   radius: 8,
   speed: 360,
-  color: 0xffffff,
+  color: 0xffe700,
   maxBounceAngle: 60, // max + or - degrees from vertical when hitting paddle edge
 };
 
 export const CENTIPEDE = {
-  size: 20,        // segment size in px
-  length: 12,      // segments in the first centipede
+  size: 25,        // segment size in px
+  length: 16,      // segments in the first centipede
   speed: 220,      // pixels per second along the path
-  color: 0xffffff, // this is easily replacible with sprites
+  color: 0xf000ff, // this is easily replacible with sprites
 };
