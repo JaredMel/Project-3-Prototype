@@ -12,6 +12,16 @@ export default class SampleScene extends Phaser.Scene {
     super('Game');
   }
 
+  preload() {
+    this.load.audio('click', './assets/sfx/click.wav');
+    this.load.audio('hit', './assets/sfx/hit.wav');
+    this.load.audio('ball_Loss', './assets/sfx/Loss.wav');
+    this.load.audio('bounce1', './assets/sfx/bounce.wav');
+    this.load.audio('bounce2', './assets/sfx/bounce2.wav');
+    this.load.audio('bounce3', './assets/sfx/bounce3.wav');
+    this.load.audio('bounce4', './assets/sfx/bounce4.wav');
+  }
+
   create() {
     // Let the ball leave through the bottom; every other edge bounces.
     this.physics.world.setBoundsCollision(true, true, true, false);
@@ -28,6 +38,7 @@ export default class SampleScene extends Phaser.Scene {
 
     this.physics.add.collider(this.ball, this.paddle, () => {
       this.ball.bounceOffPaddle(this.paddle);
+      this.playRandomBounce();
     });
     this.physics.add.collider(this.ball, this.segmentGroup, (ball, segment) => {
       this.hitSegment(segment);
@@ -55,6 +66,7 @@ export default class SampleScene extends Phaser.Scene {
 
     if (this.ball.isOutOfBounds()) {
       this.ball.attachTo(this.paddle);
+      this.sound.play('ball_Loss', { volume: 0.5 });
     }
 
     for (const centipede of this.centipedes) {
@@ -78,6 +90,7 @@ export default class SampleScene extends Phaser.Scene {
             .setInteractive({ useHandCursor: true })
         button.on('pointerover', () => button.setColor('#666666')) // when not hovering
         button.on('pointerout', () => button.setColor('#ff0000')) // when hovering
+        button.on('pointerdown', () => {this.sound.play('click', { volume: 0.5 });}) // when clicking, play sound
         button.on('pointerdown', onClick)
         return button
     }
@@ -148,6 +161,7 @@ export default class SampleScene extends Phaser.Scene {
       this.resetButton.setVisible(true);
       this.score += 100; // bonus for clearing all centipedes
     }
+    this.playHit();
     this.score += CENTIPEDE.points;
     this.scoreText.setText(this.score.toString().padStart(5, '0'));
   }
@@ -160,6 +174,8 @@ export default class SampleScene extends Phaser.Scene {
   hitMushroom(mushroom) {
     const destroyed = mushroom.destroy();
     this.mushroomGroup.remove(mushroom);
+
+    this.playRandomBounce();
     this.score += MUSHROOM.points;
     this.scoreText.setText(this.score.toString().padStart(5, '0'));
   }
@@ -182,5 +198,14 @@ export default class SampleScene extends Phaser.Scene {
       y += 20;
       x = 10;
     }
+  }
+
+  playRandomBounce() {
+    const bounceSounds = ['bounce1', 'bounce2', 'bounce3', 'bounce4'];
+    const randomBounce = bounceSounds[Math.floor(Math.random() * bounceSounds.length)];
+    this.sound.play(randomBounce, { volume: 0.5 });
+  }
+  playHit() {
+    this.sound.play('hit', { volume: 0.5 });
   }
 }
