@@ -4,6 +4,13 @@ import Ball from '../source/Ball.js';
 import Centipede from '../source/Centipede.js';
 import Mushroom from '../source/Mushroom.js';
 
+let winLoseConfig = {
+    //fontFamily: "arcade",
+    fontSize: "48px",
+    fill: " #ff0000",
+    align: "center",
+};
+
 const FIELD_TOP = 20;
 const MUSHROOM_SPAWN_CHANCE = 0.05; // 5% chance of spawning a mushroom in each cell
 
@@ -15,6 +22,7 @@ export default class SampleScene extends Phaser.Scene {
   preload() {
     //sprites
     this.load.image('mushroom', './assets/mushroom.png');
+    this.load.image('centipede', './assets/centipede.png');
 
     //audio assets
     this.load.audio('click', './assets/sfx/click.wav');
@@ -27,6 +35,10 @@ export default class SampleScene extends Phaser.Scene {
   }
 
   create() {
+    // Repeatedly used values
+    let centerwidth = GAME.width / 2;
+    let centerheight = GAME.height / 2;
+    
     // Let the ball leave through the bottom; every other edge bounces.
     this.physics.world.setBoundsCollision(true, true, true, false);
 
@@ -56,12 +68,13 @@ export default class SampleScene extends Phaser.Scene {
 
     this.createMap();
     this.score = 0;
-    this.scoreText = this.add.text(GAME.width/2 - 10, 10, '00000', { fontSize: '28px', fill: '#ff0000', Align: 'center' }).setOrigin(0.5, 0);
+    this.scoreText = this.add.text(centerwidth - 10, 10, '00000', { fontSize: '28px', fill: '#ff0000', Align: 'center' }).setOrigin(0.5, 0);
 
-    this.winloseScreen = this.add.rectangle(GAME.width/2, GAME.height/2, GAME.width/2, GAME.height/2, 0x00ff22, 0.5).setOrigin(0.5, 0.5).setVisible(false);
-    this.winText = this.add.text(GAME.width/2, GAME.height/2, 'You Win!', { fontSize: '48px', fill: '#ff0000', Align: 'center' }).setOrigin(0.5, 0.5).setVisible(false);
-    this.loseText = this.add.text(GAME.width/2, GAME.height/2, 'You Lose!', { fontSize: '48px', fill: '#ff0000', Align: 'center' }).setOrigin(0.5, 0.5).setVisible(false);
-    this.resetButton = this.makeButton(GAME.width/2, GAME.height/2 + 60, 'Reset', () => { this.scene.restart() }).setVisible(false)
+    // Win/Lose screen overlay and text
+    this.winloseScreen = this.add.rectangle(centerwidth, centerheight, centerwidth, centerheight, 0x00ff22, 0.5).setOrigin(0.5, 0.5).setVisible(false);
+    this.winText = this.add.text(centerwidth, centerheight, 'You Win!', winLoseConfig).setOrigin(0.5, 0.5).setVisible(false);
+    this.loseText = this.add.text(centerwidth, centerheight, 'You Lose!', winLoseConfig).setOrigin(0.5, 0.5).setVisible(false);
+    this.resetButton = this.makeButton(centerwidth, centerheight + 60, 'Reset', () => { this.scene.restart() }).setVisible(false)
   }
 
   update(time, delta) {
