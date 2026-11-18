@@ -28,6 +28,5 @@ export const CENTIPEDE = {
 
 export const MUSHROOM = {
   size: 20,        // mushroom size in px
-  color: 0x4caf50, // this is easily replacible with sprites
   points: 1,       // points per mushroom hit
 }

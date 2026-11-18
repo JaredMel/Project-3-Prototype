@@ -13,6 +13,10 @@ export default class SampleScene extends Phaser.Scene {
   }
 
   preload() {
+    //sprites
+    this.load.image('mushroom', './assets/mushroom.png');
+
+    //audio assets
     this.load.audio('click', './assets/sfx/click.wav');
     this.load.audio('hit', './assets/sfx/hit.wav');
     this.load.audio('ball_Loss', './assets/sfx/Loss.wav');
@@ -167,7 +171,7 @@ export default class SampleScene extends Phaser.Scene {
   }
 
   createMushroom(x, y) {
-    const mushroom = new Mushroom(this, x, y);
+    const mushroom = this.add.sprite(x, y, 'mushroom');
     this.mushroomGroup.add(mushroom);
   }
 
