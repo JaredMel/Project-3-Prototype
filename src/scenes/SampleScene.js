@@ -2,8 +2,10 @@ import { CENTIPEDE, GAME, PADDLE } from '../Breakout_consts.js';
 import Paddle from '../source/Paddle.js';
 import Ball from '../source/Ball.js';
 import Centipede from '../source/Centipede.js';
+import Mushroom from '../source/Mushroom.js';
 
 const FIELD_TOP = 20;
+const MUSHROOM_SPAWN_CHANCE = 0.05; // 5% chance of spawning a mushroom in each cell
 
 export default class SampleScene extends Phaser.Scene {
   constructor() {
@@ -21,6 +23,7 @@ export default class SampleScene extends Phaser.Scene {
 
     this.path = this.createPath();
     this.segmentGroup = this.physics.add.staticGroup();
+    this.mushroomGroup = this.physics.add.staticGroup();
     this.centipedes = [Centipede.spawn(this, this.path, this.segmentGroup)];
 
     this.physics.add.collider(this.ball, this.paddle, () => {
@@ -29,9 +32,14 @@ export default class SampleScene extends Phaser.Scene {
     this.physics.add.collider(this.ball, this.segmentGroup, (ball, segment) => {
       this.hitSegment(segment);
     });
+    this.physics.add.collider(this.ball, this.mushroomGroup, (ball, mushroom) => {
+      this.hitMushroom(mushroom);
+    });
 
     this.input.on('pointerdown', () => this.ball.launch());
     this.input.keyboard.on('keydown-SPACE', () => this.ball.launch());
+
+    this.createMap();
   }
 
   update(time, delta) {
@@ -113,6 +121,36 @@ export default class SampleScene extends Phaser.Scene {
 
     if (this.centipedes.length === 0) {
       this.scene.restart(); // all centipedes destroyed
+    }
+  }
+
+  createMushroom(x, y) {
+    const mushroom = new Mushroom(this, x, y);
+    this.mushroomGroup.add(mushroom);
+  }
+
+  hitMushroom(mushroom) {
+    const destroyed = mushroom.destroy();
+    this.mushroomGroup.remove(mushroom);
+  }
+
+  createMap() {
+    // Create a grid of mushrooms with random placement
+    const rows = 40;
+    const cols = 29;
+    let x = 10;
+    let y = 30;
+    let map = Array.from({ length: rows }, () => Array.from({ length: cols }, () => false));
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (Math.random() < MUSHROOM_SPAWN_CHANCE) {
+          map[r][c] = true;
+          this.createMushroom(x, y);
+        }
+        x += 20;
+      }
+      y += 20;
+      x = 10;
     }
   }
 }

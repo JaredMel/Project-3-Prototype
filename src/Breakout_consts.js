@@ -24,3 +24,8 @@ export const CENTIPEDE = {
   speed: 220,      // pixels per second along the path
   color: 0xffffff, // this is easily replacible with sprites
 };
+
+export const MUSHROOM = {
+  size: 20,        // mushroom size in px
+  color: 0x4caf50, // this is easily replacible with sprites
+}
