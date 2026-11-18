@@ -23,4 +23,11 @@ export const CENTIPEDE = {
   length: 12,      // segments in the first centipede
   speed: 220,      // pixels per second along the path
   color: 0xffffff, // this is easily replacible with sprites
+  points: 10,       // points per segment hit
 };
+
+export const MUSHROOM = {
+  size: 20,        // mushroom size in px
+  color: 0x4caf50, // this is easily replacible with sprites
+  points: 1,       // points per mushroom hit
+}

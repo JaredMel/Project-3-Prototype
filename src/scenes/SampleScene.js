@@ -1,9 +1,11 @@
-import { CENTIPEDE, GAME, PADDLE } from '../Breakout_consts.js';
+import { CENTIPEDE, GAME, PADDLE, MUSHROOM } from '../Breakout_consts.js';
 import Paddle from '../source/Paddle.js';
 import Ball from '../source/Ball.js';
 import Centipede from '../source/Centipede.js';
+import Mushroom from '../source/Mushroom.js';
 
 const FIELD_TOP = 20;
+const MUSHROOM_SPAWN_CHANCE = 0.05; // 5% chance of spawning a mushroom in each cell
 
 export default class SampleScene extends Phaser.Scene {
   constructor() {
@@ -21,6 +23,7 @@ export default class SampleScene extends Phaser.Scene {
 
     this.path = this.createPath();
     this.segmentGroup = this.physics.add.staticGroup();
+    this.mushroomGroup = this.physics.add.staticGroup();
     this.centipedes = [Centipede.spawn(this, this.path, this.segmentGroup)];
 
     this.physics.add.collider(this.ball, this.paddle, () => {
@@ -29,9 +32,21 @@ export default class SampleScene extends Phaser.Scene {
     this.physics.add.collider(this.ball, this.segmentGroup, (ball, segment) => {
       this.hitSegment(segment);
     });
+    this.physics.add.collider(this.ball, this.mushroomGroup, (ball, mushroom) => {
+      this.hitMushroom(mushroom);
+    });
 
     this.input.on('pointerdown', () => this.ball.launch());
     this.input.keyboard.on('keydown-SPACE', () => this.ball.launch());
+
+    this.createMap();
+    this.score = 0;
+    this.scoreText = this.add.text(GAME.width/2 - 10, 10, '00000', { fontSize: '28px', fill: '#ff0000', Align: 'center' }).setOrigin(0.5, 0);
+
+    this.winloseScreen = this.add.rectangle(GAME.width/2, GAME.height/2, GAME.width/2, GAME.height/2, 0x00ff22, 0.5).setOrigin(0.5, 0.5).setVisible(false);
+    this.winText = this.add.text(GAME.width/2, GAME.height/2, 'You Win!', { fontSize: '48px', fill: '#ff0000', Align: 'center' }).setOrigin(0.5, 0.5).setVisible(false);
+    this.loseText = this.add.text(GAME.width/2, GAME.height/2, 'You Lose!', { fontSize: '48px', fill: '#ff0000', Align: 'center' }).setOrigin(0.5, 0.5).setVisible(false);
+    this.resetButton = this.makeButton(GAME.width/2, GAME.height/2 + 60, 'Reset', () => { this.scene.restart() }).setVisible(false)
   }
 
   update(time, delta) {
@@ -48,9 +63,24 @@ export default class SampleScene extends Phaser.Scene {
 
     // Lose when a head reaches the last row of the path.
     if (this.centipedes.some((c) => c.headDistance >= this.path.dangerDistance)) {
-      this.scene.restart();
+      this.physics.pause(); // game over
+      this.winloseScreen.setVisible(true);
+      this.loseText.setVisible(true);
+      this.resetButton.setVisible(true);
     }
   }
+
+  // changed to make a standard button
+    makeButton(x, y, label, onClick) {
+        const button = this.add.text(x, y, label, { fill: 'rgb(255, 0, 0)' })
+            .setFontSize(28)
+            .setOrigin(0.5)
+            .setInteractive({ useHandCursor: true })
+        button.on('pointerover', () => button.setColor('#666666')) // when not hovering
+        button.on('pointerout', () => button.setColor('#ff0000')) // when hovering
+        button.on('pointerdown', onClick)
+        return button
+    }
 
   // Path the centipede will follow
   createPath() {
@@ -112,7 +142,45 @@ export default class SampleScene extends Phaser.Scene {
     }
 
     if (this.centipedes.length === 0) {
-      this.scene.restart(); // all centipedes destroyed
+      this.physics.pause(); // all centipedes destroyed
+      this.winloseScreen.setVisible(true);
+      this.winText.setVisible(true);
+      this.resetButton.setVisible(true);
+      this.score += 100; // bonus for clearing all centipedes
+    }
+    this.score += CENTIPEDE.points;
+    this.scoreText.setText(this.score.toString().padStart(5, '0'));
+  }
+
+  createMushroom(x, y) {
+    const mushroom = new Mushroom(this, x, y);
+    this.mushroomGroup.add(mushroom);
+  }
+
+  hitMushroom(mushroom) {
+    const destroyed = mushroom.destroy();
+    this.mushroomGroup.remove(mushroom);
+    this.score += MUSHROOM.points;
+    this.scoreText.setText(this.score.toString().padStart(5, '0'));
+  }
+
+  createMap() {
+    // Create a grid of mushrooms with random placement
+    const rows = 40;
+    const cols = 29;
+    let x = 10;
+    let y = 30;
+    let map = Array.from({ length: rows }, () => Array.from({ length: cols }, () => false));
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (Math.random() < MUSHROOM_SPAWN_CHANCE) {
+          map[r][c] = true;
+          this.createMushroom(x, y);
+        }
+        x += 20;
+      }
+      y += 20;
+      x = 10;
     }
   }
 }
