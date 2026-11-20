@@ -26,6 +26,13 @@ export const CENTIPEDE = {
   points: 10,       // points per segment hit
 };
 
+export const POWERUP = {
+  perCentipede: 2,
+  color: 0x2196f3,
+  flashMs: 200,
+  maxBalls: 8,
+};
+
 export const MUSHROOM = {
   size: 20,        // mushroom size in px
   points: 1,       // points per mushroom hit

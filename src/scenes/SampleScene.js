@@ -1,8 +1,8 @@
-import { CENTIPEDE, GAME, PADDLE, MUSHROOM } from '../Breakout_consts.js';
 import Paddle from '../source/Paddle.js';
 import Ball from '../source/Ball.js';
 import Centipede from '../source/Centipede.js';
 import Mushroom from '../source/Mushroom.js';
+import { CENTIPEDE, GAME, PADDLE, MUSHROOM, POWERUP } from '../Breakout_consts.js';
 
 let winLoseConfig = {
     //fontFamily: "arcade",
@@ -27,14 +27,14 @@ export default class SampleScene extends Phaser.Scene {
     //audio assets
     this.load.audio('click', './assets/sfx/click.wav');
     this.load.audio('hit', './assets/sfx/hit.wav');
-    this.load.audio('ball_Loss', './assets/sfx/Loss.wav');
+    this.load.audio('ball_Loss', './assets/sfx/loss.wav');
     this.load.audio('bounce1', './assets/sfx/bounce.wav');
     this.load.audio('bounce2', './assets/sfx/bounce2.wav');
     this.load.audio('bounce3', './assets/sfx/bounce3.wav');
     this.load.audio('bounce4', './assets/sfx/bounce4.wav');
   }
 
-  create() {
+   create() {
     // Repeatedly used values
     let centerwidth = GAME.width / 2;
     let centerheight = GAME.height / 2;
@@ -43,28 +43,28 @@ export default class SampleScene extends Phaser.Scene {
     this.physics.world.setBoundsCollision(true, true, true, false);
 
     this.paddle = new Paddle(this);
-    this.ball = new Ball(this);
 
-    this.ball.attachTo(this.paddle);
+    this.balls = this.add.group();
+    this.addBall().attachTo(this.paddle);
 
     this.path = this.createPath();
     this.segmentGroup = this.physics.add.staticGroup();
     this.mushroomGroup = this.physics.add.staticGroup();
     this.centipedes = [Centipede.spawn(this, this.path, this.segmentGroup)];
 
-    this.physics.add.collider(this.ball, this.paddle, () => {
-      this.ball.bounceOffPaddle(this.paddle);
+    this.physics.add.collider(this.balls, this.paddle, (ball) => {
+      ball.bounceOffPaddle(this.paddle);
       this.playRandomBounce();
     });
-    this.physics.add.collider(this.ball, this.segmentGroup, (ball, segment) => {
+    this.physics.add.collider(this.balls, this.segmentGroup, (ball, segment) => {
       this.hitSegment(segment);
     });
-    this.physics.add.collider(this.ball, this.mushroomGroup, (ball, mushroom) => {
+    this.physics.add.collider(this.balls, this.mushroomGroup, (ball, mushroom) => {
       this.hitMushroom(mushroom);
     });
 
-    this.input.on('pointerdown', () => this.ball.launch());
-    this.input.keyboard.on('keydown-SPACE', () => this.ball.launch());
+    this.input.on('pointerdown', () => this.launchBalls());
+    this.input.keyboard.on('keydown-SPACE', () => this.launchBalls());
 
     this.createMap();
     this.score = 0;
@@ -79,11 +79,17 @@ export default class SampleScene extends Phaser.Scene {
 
   update(time, delta) {
     this.paddle.update();
-    this.ball.follow(this.paddle);
 
-    if (this.ball.isOutOfBounds()) {
-      this.ball.attachTo(this.paddle);
-      this.sound.play('ball_Loss', { volume: 0.5 });
+    for (const ball of this.balls.getChildren().slice()) {
+      ball.follow(this.paddle);
+      if (!ball.isOutOfBounds()) continue;
+
+      if (this.balls.getLength() > 1) {
+        ball.destroy();
+      } else {
+        ball.attachTo(this.paddle);
+        this.sound.play('ball_Loss', { volume: 0.5 });
+      }
     }
 
     for (const centipede of this.centipedes) {
@@ -162,7 +168,24 @@ export default class SampleScene extends Phaser.Scene {
     };
   }
 
+  addBall() {
+    const ball = new Ball(this);
+    this.balls.add(ball);
+    return ball;
+  }
+
+  launchBalls() {
+    this.balls.getChildren().forEach((ball) => ball.launch());
+  }
+
+  spawnExtraBall(x, y) {
+    if (this.balls.getLength() >= POWERUP.maxBalls) return;
+    this.time.delayedCall(0, () => this.addBall().launchFrom(x, y));
+  }
+
   hitSegment(segment) {
+    if (segment.isPowerup) this.spawnExtraBall(segment.x, segment.y);
+
     const centipede = segment.centipede;
     const spawned = centipede.hit(segment);
 
