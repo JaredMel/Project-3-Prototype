@@ -1,4 +1,4 @@
-import { CENTIPEDE } from '../Breakout_consts.js';
+import { CENTIPEDE, POWERUP } from '../Breakout_consts.js';
 
 export default class Segment extends Phaser.GameObjects.Sprite {
   constructor(scene, distance) {
@@ -11,11 +11,41 @@ export default class Segment extends Phaser.GameObjects.Sprite {
 
     this.distance = distance; // position along the path, in pixels
     this.centipede = null;    // set by Centipede
+    this.isPowerup = false;
+    this.flashTimer = null;
+  }
+
+  makePowerup() {
+    if (this.isPowerup) return;
+    this.isPowerup = true;
+    this.setTintFill(POWERUP.color);
+
+    let blue = true;
+    this.flashTimer = this.scene.time.addEvent({
+      delay: POWERUP.flashMs,
+      loop: true,
+      callback: () => {
+        blue = !blue;
+        if (blue) {
+          this.setTintFill(POWERUP.color);
+        } else {
+          this.clearTint();
+        }
+      },
+    });
   }
 
   placeAt({ x, y }) {
     this.setPosition(x, y);
     this.body.updateFromGameObject();
+  }
+
+  destroy(fromScene) {
+    if (this.flashTimer) {
+      this.flashTimer.remove();
+      this.flashTimer = null;
+    }
+    super.destroy(fromScene);
   }
 }
 

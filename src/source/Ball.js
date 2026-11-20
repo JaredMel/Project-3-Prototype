@@ -37,6 +37,13 @@ export default class Ball extends Phaser.GameObjects.Arc {
     this.body.setVelocity(Math.cos(angle) * BALL.speed, Math.sin(angle) * BALL.speed);
   }
 
+  launchFrom(x, y) {
+    this.launched = true;
+    this.body.reset(x, y);
+    const angle = Phaser.Math.DegToRad(-90 + Phaser.Math.Between(-45, 45));
+    this.body.setVelocity(Math.cos(angle) * BALL.speed, Math.sin(angle) * BALL.speed);
+  }
+  
   bounceOffPaddle(paddle) {
     const offset = paddle.hitOffset(this.x);
     const angle = Phaser.Math.DegToRad(-90 + offset * BALL.maxBounceAngle);

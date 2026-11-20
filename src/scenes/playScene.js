@@ -1,9 +1,8 @@
-import { GAME } from '../Breakout_consts.js';
-import { CENTIPEDE, PADDLE, MUSHROOM } from '../Breakout_consts.js';
 import Paddle from '../source/Paddle.js';
 import Ball from '../source/Ball.js';
 import Centipede from '../source/Centipede.js';
 import Mushroom from '../source/Mushroom.js';
+import { CENTIPEDE, GAME, PADDLE, MUSHROOM, POWERUP } from '../Breakout_consts.js';
 
 let winLoseConfig = {
   //fontFamily: "arcade",
@@ -20,9 +19,6 @@ export class Play extends Phaser.Scene {
     super('playScene');
   }
 
-  // ========================
-  // Create
-  // ========================
   create() {
     console.log("Currently on Play Scene")
 
@@ -35,35 +31,33 @@ export class Play extends Phaser.Scene {
 
     // create paddle and ball
     this.paddle = new Paddle(this);
-    this.ball = new Ball(this);
 
+    this.balls = this.add.group();
     // Basic behaviors for the ball and paddle
-    this.ball.attachTo(this.paddle);
+    this.addBall().attachTo(this.paddle);
     this.path = this.createPath();
 
-    // Create groups for segments and mushrooms, and spawn the initial centipede
-    //TODO: Change visability for mushrooms so that they are not visible when centipede is on the same square as them.
     this.segmentGroup = this.physics.add.staticGroup();
     this.mushroomGroup = this.physics.add.staticGroup();
     this.createMap(); // Create the initial map of mushrooms
     this.centipedes = [Centipede.spawn(this, this.path, this.segmentGroup)];
 
     //PHYSICS COLLISIONS
-    this.physics.add.collider(this.ball, this.paddle, () => {
-      this.ball.bounceOffPaddle(this.paddle);
+    this.physics.add.collider(this.balls, this.paddle, (ball) => {
+      ball.bounceOffPaddle(this.paddle);
       this.playRandomBounce();
     });
-    this.physics.add.collider(this.ball, this.segmentGroup, (ball, segment) => {
+    this.physics.add.collider(this.balls, this.segmentGroup, (ball, segment) => {
       this.hitSegment(segment);
     });
-    this.physics.add.collider(this.ball, this.mushroomGroup, (ball, mushroom) => {
+    this.physics.add.collider(this.balls, this.mushroomGroup, (ball, mushroom) => {
       this.hitMushroom(mushroom);
     });
 
 
     // Input handling for launching the ball
-    this.input.on('pointerdown', () => this.ball.launch());
-    this.input.keyboard.on('keydown-SPACE', () => this.ball.launch());
+    this.input.on('pointerdown', () => this.launchBalls());
+    this.input.keyboard.on('keydown-SPACE', () => this.launchBalls());
 
 
     // UI
@@ -79,17 +73,20 @@ export class Play extends Phaser.Scene {
     this.resetButton = this.makeButton(centerwidth, centerheight + 60, 'Reset', () => { this.scene.restart() }).setVisible(false)
   }
 
-  // ========================
-  // UPDATE
-  // ========================
   update(time, delta) {
     this.paddle.update();
-    this.ball.follow(this.paddle);
 
     // Check if the ball is out of bounds and reset it if necessary
-    if (this.ball.isOutOfBounds()) {
-      this.ball.attachTo(this.paddle);
-      this.sound.play('ball_Loss', { volume: 0.5 });
+    for (const ball of this.balls.getChildren().slice()) {
+      ball.follow(this.paddle);
+      if (!ball.isOutOfBounds()) continue;
+
+      if (this.balls.getLength() > 1) {
+        ball.destroy();
+      } else {
+        ball.attachTo(this.paddle);
+        this.sound.play('ball_Loss', { volume: 0.5 });
+      }
     }
 
     // CENTIPEDE
@@ -157,7 +154,24 @@ export class Play extends Phaser.Scene {
     };
   }
 
+  addBall() {
+    const ball = new Ball(this);
+    this.balls.add(ball);
+    return ball;
+  }
+
+  launchBalls() {
+    this.balls.getChildren().forEach((ball) => ball.launch());
+  }
+
+  spawnExtraBall(x, y) {
+    if (this.balls.getLength() >= POWERUP.maxBalls) return;
+    this.time.delayedCall(0, () => this.addBall().launchFrom(x, y));
+  }
+
   hitSegment(segment) {
+    if (segment.isPowerup) this.spawnExtraBall(segment.x, segment.y);
+
     const centipede = segment.centipede;
     const spawned = centipede.hit(segment);
 
@@ -196,10 +210,10 @@ export class Play extends Phaser.Scene {
 
   // Create a grid of mushrooms with a random chance of spawning in each cell
   createMap() {
-    const rows = 39;  // number of rows in the grid
-    const cols = 29;  // number of columns in the grid
-    let x = 10;       // starting x position for the grid
-    let y = 50;       // starting y position for the grid
+    const rows = 39; // number of rows in the grid
+    const cols = 29; // number of columns in the grid
+    let x = 10; // starting x position for the grid
+    let y = 50; // starting y position for the grid
 
     let map = Array.from({ length: rows }, () => Array.from({ length: cols }, () => false));
     for (let r = 0; r < rows; r++) {

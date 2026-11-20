@@ -1,5 +1,6 @@
-import { CENTIPEDE } from '../Breakout_consts.js';
+//import { CENTIPEDE } from '../Breakout_consts.js';
 import Segment from './Segment.js';
+import { CENTIPEDE, POWERUP } from '../Breakout_consts.js';
 
 export default class Centipede {
   constructor(scene, path, segments) {
@@ -17,6 +18,8 @@ export default class Centipede {
       group.add(segment);
       segments.push(segment);
     }
+    const picks = Phaser.Utils.Array.Shuffle([...segments]).slice(0, POWERUP.perCentipede);
+    picks.forEach((s) => s.makePowerup());
     return new Centipede(scene, path, segments);
   }
 
