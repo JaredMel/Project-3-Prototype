@@ -1,9 +1,10 @@
 import { CENTIPEDE } from '../Breakout_consts.js';
 
-export default class Segment extends Phaser.GameObjects.Rectangle {
+export default class Segment extends Phaser.GameObjects.Sprite {
   constructor(scene, distance) {
     const size = CENTIPEDE.size;
-    super(scene, 0, 0, size - 2, size - 2, CENTIPEDE.color);
+    super(scene, 0, 0, 'centipede'); // load sprite from the 'centipede-segment' texture
+    this.setTint(CENTIPEDE.color); // set the tint color to the centipede color
 
     scene.add.existing(this);
     scene.physics.add.existing(this, true);
