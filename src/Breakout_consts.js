@@ -29,4 +29,5 @@ export const CENTIPEDE = {
 export const MUSHROOM = {
   size: 20,        // mushroom size in px
   points: 1,       // points per mushroom hit
+  color: 0x00FF00 // mushroom color - pure green
 }

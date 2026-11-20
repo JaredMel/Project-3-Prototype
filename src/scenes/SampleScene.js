@@ -184,7 +184,7 @@ export default class SampleScene extends Phaser.Scene {
   }
 
   createMushroom(x, y) {
-    const mushroom = this.add.sprite(x, y, 'mushroom');
+    const mushroom = new Mushroom(this, x, y);
     this.mushroomGroup.add(mushroom);
   }
 
