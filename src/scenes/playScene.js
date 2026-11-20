@@ -5,53 +5,44 @@ import Mushroom from '../source/Mushroom.js';
 import { CENTIPEDE, GAME, PADDLE, MUSHROOM, POWERUP } from '../Breakout_consts.js';
 
 let winLoseConfig = {
-    //fontFamily: "arcade",
-    fontSize: "48px",
-    fill: " #ff0000",
-    align: "center",
+  //fontFamily: "arcade",
+  fontSize: "48px",
+  fill: " #ff0000",
+  align: "center",
 };
 
 const FIELD_TOP = 20;
 const MUSHROOM_SPAWN_CHANCE = 0.05; // 5% chance of spawning a mushroom in each cell
 
-export default class SampleScene extends Phaser.Scene {
+export class Play extends Phaser.Scene {
   constructor() {
-    super('Game');
+    super('playScene');
   }
 
-  preload() {
-    //sprites
-    this.load.image('mushroom', './assets/mushroom.png');
-    this.load.image('centipede', './assets/centipede.png');
+  create() {
+    console.log("Currently on Play Scene")
 
-    //audio assets
-    this.load.audio('click', './assets/sfx/click.wav');
-    this.load.audio('hit', './assets/sfx/hit.wav');
-    this.load.audio('ball_Loss', './assets/sfx/loss.wav');
-    this.load.audio('bounce1', './assets/sfx/bounce.wav');
-    this.load.audio('bounce2', './assets/sfx/bounce2.wav');
-    this.load.audio('bounce3', './assets/sfx/bounce3.wav');
-    this.load.audio('bounce4', './assets/sfx/bounce4.wav');
-  }
-
-   create() {
     // Repeatedly used values
     let centerwidth = GAME.width / 2;
     let centerheight = GAME.height / 2;
-    
+
     // Let the ball leave through the bottom; every other edge bounces.
     this.physics.world.setBoundsCollision(true, true, true, false);
 
+    // create paddle and ball
     this.paddle = new Paddle(this);
 
     this.balls = this.add.group();
+    // Basic behaviors for the ball and paddle
     this.addBall().attachTo(this.paddle);
-
     this.path = this.createPath();
+
     this.segmentGroup = this.physics.add.staticGroup();
     this.mushroomGroup = this.physics.add.staticGroup();
+    this.createMap(); // Create the initial map of mushrooms
     this.centipedes = [Centipede.spawn(this, this.path, this.segmentGroup)];
 
+    //PHYSICS COLLISIONS
     this.physics.add.collider(this.balls, this.paddle, (ball) => {
       ball.bounceOffPaddle(this.paddle);
       this.playRandomBounce();
@@ -63,14 +54,19 @@ export default class SampleScene extends Phaser.Scene {
       this.hitMushroom(mushroom);
     });
 
+
+    // Input handling for launching the ball
     this.input.on('pointerdown', () => this.launchBalls());
     this.input.keyboard.on('keydown-SPACE', () => this.launchBalls());
 
-    this.createMap();
+
+    // UI
+    // Score display
     this.score = 0;
     this.scoreText = this.add.text(centerwidth - 10, 10, '00000', { fontSize: '28px', fill: '#ff0000', Align: 'center' }).setOrigin(0.5, 0);
 
-    // Win/Lose screen overlay and text
+    // Win/Lose screen overlay
+    // TODO: Pause the game when the win/lose screen is displayed, and reset the game when the player clicks the reset button.
     this.winloseScreen = this.add.rectangle(centerwidth, centerheight, centerwidth, centerheight, 0x00ff22, 0.5).setOrigin(0.5, 0.5).setVisible(false);
     this.winText = this.add.text(centerwidth, centerheight, 'You Win!', winLoseConfig).setOrigin(0.5, 0.5).setVisible(false);
     this.loseText = this.add.text(centerwidth, centerheight, 'You Lose!', winLoseConfig).setOrigin(0.5, 0.5).setVisible(false);
@@ -80,6 +76,7 @@ export default class SampleScene extends Phaser.Scene {
   update(time, delta) {
     this.paddle.update();
 
+    // Check if the ball is out of bounds and reset it if necessary
     for (const ball of this.balls.getChildren().slice()) {
       ball.follow(this.paddle);
       if (!ball.isOutOfBounds()) continue;
@@ -92,6 +89,8 @@ export default class SampleScene extends Phaser.Scene {
       }
     }
 
+    // CENTIPEDE
+    // Update each centipede's position based on the elapsed time
     for (const centipede of this.centipedes) {
       centipede.update(delta);
     }
@@ -104,19 +103,6 @@ export default class SampleScene extends Phaser.Scene {
       this.resetButton.setVisible(true);
     }
   }
-
-  // changed to make a standard button
-    makeButton(x, y, label, onClick) {
-        const button = this.add.text(x, y, label, { fill: 'rgb(255, 0, 0)' })
-            .setFontSize(28)
-            .setOrigin(0.5)
-            .setInteractive({ useHandCursor: true })
-        button.on('pointerover', () => button.setColor('#666666')) // when not hovering
-        button.on('pointerout', () => button.setColor('#ff0000')) // when hovering
-        button.on('pointerdown', () => {this.sound.play('click', { volume: 0.5 });}) // when clicking, play sound
-        button.on('pointerdown', onClick)
-        return button
-    }
 
   // Path the centipede will follow
   createPath() {
@@ -206,11 +192,13 @@ export default class SampleScene extends Phaser.Scene {
     this.scoreText.setText(this.score.toString().padStart(5, '0'));
   }
 
+  // MUSHROOM HANDLING
   createMushroom(x, y) {
-    const mushroom = this.add.sprite(x, y, 'mushroom');
+    const mushroom = new Mushroom(this, x, y);
     this.mushroomGroup.add(mushroom);
   }
 
+  // Handle the event when the ball hits a mushroom
   hitMushroom(mushroom) {
     const destroyed = mushroom.destroy();
     this.mushroomGroup.remove(mushroom);
@@ -220,12 +208,13 @@ export default class SampleScene extends Phaser.Scene {
     this.scoreText.setText(this.score.toString().padStart(5, '0'));
   }
 
+  // Create a grid of mushrooms with a random chance of spawning in each cell
   createMap() {
-    // Create a grid of mushrooms with random placement
-    const rows = 40;
-    const cols = 29;
-    let x = 10;
-    let y = 30;
+    const rows = 39; // number of rows in the grid
+    const cols = 29; // number of columns in the grid
+    let x = 10; // starting x position for the grid
+    let y = 50; // starting y position for the grid
+
     let map = Array.from({ length: rows }, () => Array.from({ length: cols }, () => false));
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
@@ -240,6 +229,23 @@ export default class SampleScene extends Phaser.Scene {
     }
   }
 
+  // UI Helper Functions
+  // changed to make a standard button
+  makeButton(x, y, label, onClick) {
+    const button = this.add.text(x, y, label, { fill: 'rgb(255, 0, 0)' })
+      .setFontSize(28)
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+
+    button.on('pointerover', () => button.setColor('#666666')) // when not hovering
+    button.on('pointerout', () => button.setColor('#ff0000')) // when hovering
+    button.on('pointerdown', () => { this.sound.play('click', { volume: 0.5 }); }) // when clicking, play sound
+    button.on('pointerdown', onClick)
+    
+    return button
+  }
+
+  // SFX Helper Functions
   playRandomBounce() {
     const bounceSounds = ['bounce1', 'bounce2', 'bounce3', 'bounce4'];
     const randomBounce = bounceSounds[Math.floor(Math.random() * bounceSounds.length)];

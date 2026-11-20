@@ -3,7 +3,8 @@
 // Citations: 
 //
 import { GAME } from './Breakout_consts.js';
-import SampleScene from './scenes/SampleScene.js'
+import { Start } from './scenes/StartScene.js';
+import { Play } from './scenes/playScene.js';
 
 let config = {
     parent: 'phaser-game',
@@ -11,7 +12,7 @@ let config = {
     width: GAME.width,
     height: GAME.height,
     backgroundColor: '#1b1b2f',
-    scene: [ SampleScene ],
+    scene: [ Start, Play ],
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
@@ -21,4 +22,4 @@ let config = {
         arcade: { debug: false } 
     },
 }
-let game = new Phaser.Game(config)
+let game = new Phaser.Game(config);
