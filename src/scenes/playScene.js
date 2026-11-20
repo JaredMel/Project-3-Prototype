@@ -20,6 +20,9 @@ export class Play extends Phaser.Scene {
     super('playScene');
   }
 
+  // ========================
+  // Create
+  // ========================
   create() {
     console.log("Currently on Play Scene")
 
@@ -30,16 +33,22 @@ export class Play extends Phaser.Scene {
     // Let the ball leave through the bottom; every other edge bounces.
     this.physics.world.setBoundsCollision(true, true, true, false);
 
+    // create paddle and ball
     this.paddle = new Paddle(this);
     this.ball = new Ball(this);
 
+    // Basic behaviors for the ball and paddle
     this.ball.attachTo(this.paddle);
-
     this.path = this.createPath();
+
+    // Create groups for segments and mushrooms, and spawn the initial centipede
+    //TODO: Change visability for mushrooms so that they are not visible when centipede is on the same square as them.
     this.segmentGroup = this.physics.add.staticGroup();
     this.mushroomGroup = this.physics.add.staticGroup();
+    this.createMap(); // Create the initial map of mushrooms
     this.centipedes = [Centipede.spawn(this, this.path, this.segmentGroup)];
 
+    //PHYSICS COLLISIONS
     this.physics.add.collider(this.ball, this.paddle, () => {
       this.ball.bounceOffPaddle(this.paddle);
       this.playRandomBounce();
@@ -51,29 +60,40 @@ export class Play extends Phaser.Scene {
       this.hitMushroom(mushroom);
     });
 
+
+    // Input handling for launching the ball
     this.input.on('pointerdown', () => this.ball.launch());
     this.input.keyboard.on('keydown-SPACE', () => this.ball.launch());
 
-    this.createMap();
+
+    // UI
+    // Score display
     this.score = 0;
     this.scoreText = this.add.text(centerwidth - 10, 10, '00000', { fontSize: '28px', fill: '#ff0000', Align: 'center' }).setOrigin(0.5, 0);
 
-    // Win/Lose screen overlay and text
+    // Win/Lose screen overlay
+    // TODO: Pause the game when the win/lose screen is displayed, and reset the game when the player clicks the reset button.
     this.winloseScreen = this.add.rectangle(centerwidth, centerheight, centerwidth, centerheight, 0x00ff22, 0.5).setOrigin(0.5, 0.5).setVisible(false);
     this.winText = this.add.text(centerwidth, centerheight, 'You Win!', winLoseConfig).setOrigin(0.5, 0.5).setVisible(false);
     this.loseText = this.add.text(centerwidth, centerheight, 'You Lose!', winLoseConfig).setOrigin(0.5, 0.5).setVisible(false);
     this.resetButton = this.makeButton(centerwidth, centerheight + 60, 'Reset', () => { this.scene.restart() }).setVisible(false)
   }
 
+  // ========================
+  // UPDATE
+  // ========================
   update(time, delta) {
     this.paddle.update();
     this.ball.follow(this.paddle);
 
+    // Check if the ball is out of bounds and reset it if necessary
     if (this.ball.isOutOfBounds()) {
       this.ball.attachTo(this.paddle);
       this.sound.play('ball_Loss', { volume: 0.5 });
     }
 
+    // CENTIPEDE
+    // Update each centipede's position based on the elapsed time
     for (const centipede of this.centipedes) {
       centipede.update(delta);
     }
@@ -85,19 +105,6 @@ export class Play extends Phaser.Scene {
       this.loseText.setVisible(true);
       this.resetButton.setVisible(true);
     }
-  }
-
-  // changed to make a standard button
-  makeButton(x, y, label, onClick) {
-    const button = this.add.text(x, y, label, { fill: 'rgb(255, 0, 0)' })
-      .setFontSize(28)
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true })
-    button.on('pointerover', () => button.setColor('#666666')) // when not hovering
-    button.on('pointerout', () => button.setColor('#ff0000')) // when hovering
-    button.on('pointerdown', () => { this.sound.play('click', { volume: 0.5 }); }) // when clicking, play sound
-    button.on('pointerdown', onClick)
-    return button
   }
 
   // Path the centipede will follow
@@ -171,11 +178,13 @@ export class Play extends Phaser.Scene {
     this.scoreText.setText(this.score.toString().padStart(5, '0'));
   }
 
+  // MUSHROOM HANDLING
   createMushroom(x, y) {
     const mushroom = new Mushroom(this, x, y);
     this.mushroomGroup.add(mushroom);
   }
 
+  // Handle the event when the ball hits a mushroom
   hitMushroom(mushroom) {
     const destroyed = mushroom.destroy();
     this.mushroomGroup.remove(mushroom);
@@ -185,12 +194,13 @@ export class Play extends Phaser.Scene {
     this.scoreText.setText(this.score.toString().padStart(5, '0'));
   }
 
+  // Create a grid of mushrooms with a random chance of spawning in each cell
   createMap() {
-    // Create a grid of mushrooms with random placement
-    const rows = 40;
-    const cols = 29;
-    let x = 10;
-    let y = 30;
+    const rows = 39;  // number of rows in the grid
+    const cols = 29;  // number of columns in the grid
+    let x = 10;       // starting x position for the grid
+    let y = 50;       // starting y position for the grid
+
     let map = Array.from({ length: rows }, () => Array.from({ length: cols }, () => false));
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
@@ -205,6 +215,23 @@ export class Play extends Phaser.Scene {
     }
   }
 
+  // UI Helper Functions
+  // changed to make a standard button
+  makeButton(x, y, label, onClick) {
+    const button = this.add.text(x, y, label, { fill: 'rgb(255, 0, 0)' })
+      .setFontSize(28)
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+
+    button.on('pointerover', () => button.setColor('#666666')) // when not hovering
+    button.on('pointerout', () => button.setColor('#ff0000')) // when hovering
+    button.on('pointerdown', () => { this.sound.play('click', { volume: 0.5 }); }) // when clicking, play sound
+    button.on('pointerdown', onClick)
+    
+    return button
+  }
+
+  // SFX Helper Functions
   playRandomBounce() {
     const bounceSounds = ['bounce1', 'bounce2', 'bounce3', 'bounce4'];
     const randomBounce = bounceSounds[Math.floor(Math.random() * bounceSounds.length)];
