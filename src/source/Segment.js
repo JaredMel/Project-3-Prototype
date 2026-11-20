@@ -18,7 +18,7 @@ export default class Segment extends Phaser.GameObjects.Sprite {
   makePowerup() {
     if (this.isPowerup) return;
     this.isPowerup = true;
-    this.setFillStyle(POWERUP.color);
+    this.setTintFill(POWERUP.color);
 
     let blue = true;
     this.flashTimer = this.scene.time.addEvent({
@@ -26,7 +26,11 @@ export default class Segment extends Phaser.GameObjects.Sprite {
       loop: true,
       callback: () => {
         blue = !blue;
-        this.setFillStyle(blue ? POWERUP.color : CENTIPEDE.color);
+        if (blue) {
+          this.setTintFill(POWERUP.color);
+        } else {
+          this.clearTint();
+        }
       },
     });
   }
