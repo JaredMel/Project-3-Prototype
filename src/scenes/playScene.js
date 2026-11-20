@@ -1,44 +1,32 @@
-import { CENTIPEDE, GAME, PADDLE, MUSHROOM } from '../Breakout_consts.js';
+import { GAME } from '../Breakout_consts.js';
+import { CENTIPEDE, PADDLE, MUSHROOM } from '../Breakout_consts.js';
 import Paddle from '../source/Paddle.js';
 import Ball from '../source/Ball.js';
 import Centipede from '../source/Centipede.js';
 import Mushroom from '../source/Mushroom.js';
 
 let winLoseConfig = {
-    //fontFamily: "arcade",
-    fontSize: "48px",
-    fill: " #ff0000",
-    align: "center",
+  //fontFamily: "arcade",
+  fontSize: "48px",
+  fill: " #ff0000",
+  align: "center",
 };
 
 const FIELD_TOP = 20;
 const MUSHROOM_SPAWN_CHANCE = 0.05; // 5% chance of spawning a mushroom in each cell
 
-export default class SampleScene extends Phaser.Scene {
+export class Play extends Phaser.Scene {
   constructor() {
-    super('Game');
-  }
-
-  preload() {
-    //sprites
-    this.load.image('mushroom', './assets/mushroom.png');
-    this.load.image('centipede', './assets/centipede.png');
-
-    //audio assets
-    this.load.audio('click', './assets/sfx/click.wav');
-    this.load.audio('hit', './assets/sfx/hit.wav');
-    this.load.audio('ball_Loss', './assets/sfx/Loss.wav');
-    this.load.audio('bounce1', './assets/sfx/bounce.wav');
-    this.load.audio('bounce2', './assets/sfx/bounce2.wav');
-    this.load.audio('bounce3', './assets/sfx/bounce3.wav');
-    this.load.audio('bounce4', './assets/sfx/bounce4.wav');
+    super('playScene');
   }
 
   create() {
+    console.log("Currently on Play Scene")
+
     // Repeatedly used values
     let centerwidth = GAME.width / 2;
     let centerheight = GAME.height / 2;
-    
+
     // Let the ball leave through the bottom; every other edge bounces.
     this.physics.world.setBoundsCollision(true, true, true, false);
 
@@ -100,17 +88,17 @@ export default class SampleScene extends Phaser.Scene {
   }
 
   // changed to make a standard button
-    makeButton(x, y, label, onClick) {
-        const button = this.add.text(x, y, label, { fill: 'rgb(255, 0, 0)' })
-            .setFontSize(28)
-            .setOrigin(0.5)
-            .setInteractive({ useHandCursor: true })
-        button.on('pointerover', () => button.setColor('#666666')) // when not hovering
-        button.on('pointerout', () => button.setColor('#ff0000')) // when hovering
-        button.on('pointerdown', () => {this.sound.play('click', { volume: 0.5 });}) // when clicking, play sound
-        button.on('pointerdown', onClick)
-        return button
-    }
+  makeButton(x, y, label, onClick) {
+    const button = this.add.text(x, y, label, { fill: 'rgb(255, 0, 0)' })
+      .setFontSize(28)
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+    button.on('pointerover', () => button.setColor('#666666')) // when not hovering
+    button.on('pointerout', () => button.setColor('#ff0000')) // when hovering
+    button.on('pointerdown', () => { this.sound.play('click', { volume: 0.5 }); }) // when clicking, play sound
+    button.on('pointerdown', onClick)
+    return button
+  }
 
   // Path the centipede will follow
   createPath() {
