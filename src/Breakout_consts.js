@@ -29,4 +29,14 @@ export const CENTIPEDE = {
 export const MUSHROOM = {
   size: 20,        // mushroom size in px
   points: 1,       // points per mushroom hit
+  spawnMs: 2000,   
+  maxCount: 60,
 }
+
+export const PLAYER = {
+  length: 6,          
+  speed: 260,         
+  bottomMargin: 40,   
+  color: 0x4fc3f7,
+  graceMs: 1000,
+};
