@@ -1,4 +1,4 @@
-import { CENTIPEDE } from '../Breakout_consts.js';
+import { CENTIPEDE, BALL, GAME, PLAYER } from '../Breakout_consts.js';
 import Segment from './Segment.js';
 
 export default class Centipede {
