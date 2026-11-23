@@ -85,7 +85,7 @@ export class Play extends Phaser.Scene {
         ball.destroy();
       } else {
         ball.attachTo(this.paddle);
-        this.sound.play('ball_Loss', { volume: 0.5 });
+        this.sound.play('loss', { volume: 0.5 });
       }
     }
 
