@@ -16,7 +16,7 @@ export class Start extends Phaser.Scene {
         //audio assets
         this.load.audio('click', './assets/sfx/click.wav');
         this.load.audio('hit', './assets/sfx/hit.wav');
-        this.load.audio('ball_Loss', './assets/sfx/Loss.wav');
+        this.load.audio('loss', './assets/sfx/Loss.wav');
         this.load.audio('bounce1', './assets/sfx/bounce.wav');
         this.load.audio('bounce2', './assets/sfx/bounce2.wav');
         this.load.audio('bounce3', './assets/sfx/bounce3.wav');
