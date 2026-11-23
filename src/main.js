@@ -1,9 +1,9 @@
 // Title: Project 3 Prototype
-// Authors: Jared Melendez, Max Brockmann, Ava Johnson, Niko Distefano, 
+// Authors: Jared Melendez, Max Brockmann, Ava Johnson, Sophia Aguado
 // Citations: 
 //
 import { GAME } from './Breakout_consts.js';
-import { Start } from './scenes/StartScene.js';
+import { Start } from './scenes/startScene.js';
 import { Play } from './scenes/playScene.js';
 
 let config = {
