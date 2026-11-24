@@ -14,27 +14,14 @@ let winLoseConfig = {
 const FIELD_TOP = 20;
 const MUSHROOM_SPAWN_CHANCE = 0.025; // 2.5% chance of spawning a mushroom in each cell
 
-export default class SampleScene extends Phaser.Scene {
+export class Play extends Phaser.Scene {
   constructor() {
-    super('Game');
-  }
-
-  preload() {
-    //sprites
-    this.load.image('mushroom', './assets/mushroom.png');
-    this.load.image('centipede', './assets/centipede.png');
-
-    //audio assets
-    this.load.audio('click', './assets/sfx/click.wav');
-    this.load.audio('hit', './assets/sfx/hit.wav');
-    this.load.audio('ball_Loss', './assets/sfx/Loss.wav');
-    this.load.audio('bounce1', './assets/sfx/bounce.wav');
-    this.load.audio('bounce2', './assets/sfx/bounce2.wav');
-    this.load.audio('bounce3', './assets/sfx/bounce3.wav');
-    this.load.audio('bounce4', './assets/sfx/bounce4.wav');
+    super('playScene');
   }
 
   create() {
+    console.log("Currently on Play Scene");
+
     // Repeatedly used values
     let centerwidth = GAME.width / 2;
     let centerheight = GAME.height / 2;
@@ -54,6 +41,7 @@ export default class SampleScene extends Phaser.Scene {
       { minX: half, maxX: GAME.width - half, minY: half, maxY: GAME.height - half },
       this.mushroomGroup
     );
+    this.segmentGroup = this.physics.add.staticGroup();
 
     // Enemy
     this.ball = new Ball(this, GAME.width / 2, GAME.height / 4);
@@ -63,12 +51,10 @@ export default class SampleScene extends Phaser.Scene {
       ball.bounceOff(segment);
       this.playerHit();
     });
-
-    // this.path = this.createPath();
-    this.segmentGroup = this.physics.add.staticGroup();
   
-    //this.centipedes = [Centipede.spawn(this, this.path, this.segmentGroup)];
-
+    // ========================
+    // PHYSICS COLLISIONS
+    // ========================
     this.physics.add.collider(this.ball, this.paddle, () => {
       this.ball.bounceOffPaddle(this.paddle);
       this.playRandomBounce();
@@ -80,10 +66,15 @@ export default class SampleScene extends Phaser.Scene {
       this.hitMushroom(mushroom);
     });
 
-    this.input.on('pointerdown', () => this.ball.launch());
-    this.input.keyboard.on('keydown-SPACE', () => this.ball.launch());
+    // this.input.on('pointerdown', () => this.ball.launch());
+    // this.input.keyboard.on('keydown-SPACE', () => this.ball.launch());
 
+    // Create the map of mushrooms
     this.createMap();
+
+    // ========================
+    //UI
+    // ========================
     this.score = 0;
     this.scoreText = this.add.text(centerwidth - 10, 10, '00000', { fontSize: '28px', fill: '#ff0000', Align: 'center' }).setOrigin(0.5, 0);
 
@@ -109,29 +100,9 @@ export default class SampleScene extends Phaser.Scene {
 
   update(time, delta) {
     this.player.update(delta);
-
-    // this.paddle.update();
-    // this.ball.follow(this.paddle);
-
-    // if (this.ball.isOutOfBounds()) {
-    //   this.ball.attachTo(this.paddle);
-    //   this.sound.play('ball_Loss', { volume: 0.5 });
-    // }
-
-    // for (const centipede of this.centipedes) {
-    //   centipede.update(delta);
-    // }
-
-    // Lose when a head reaches the last row of the path.
-    // if (this.centipedes.some((c) => c.headDistance >= this.path.dangerDistance)) {
-    //   this.physics.pause(); // game over
-    //   this.winloseScreen.setVisible(true);
-    //   this.loseText.setVisible(true);
-    //   this.resetButton.setVisible(true);
-    // }
   }
 
-  // changed to make a standard button
+  // Standard Button
     makeButton(x, y, label, onClick) {
         const button = this.add.text(x, y, label, { fill: 'rgb(255, 0, 0)' })
             .setFontSize(28)
@@ -144,56 +115,10 @@ export default class SampleScene extends Phaser.Scene {
         return button
     }
 
-  // Path the centipede will follow
-  // createPath() {
-  //   const size = CENTIPEDE.size;
-  //   const paddleTop = GAME.height - PADDLE.bottomMargin - PADDLE.height / 2;
-  //   const rows = Math.max(2, Math.floor((paddleTop - FIELD_TOP) / size));
-  //   const xMin = size / 2;
-  //   const xMax = GAME.width - size / 2;
 
-  //   const points = [];
-  //   for (let r = 0; r < rows; r++) {
-  //     const y = FIELD_TOP + r * size + size / 2;
-  //     const [from, to] = r % 2 === 0 ? [xMin, xMax] : [xMax, xMin];
-  //     points.push({ x: from, y }, { x: to, y });
-  //   }
-
-  //   const cumulative = [0];
-  //   for (let i = 1; i < points.length; i++) {
-  //     const a = points[i - 1];
-  //     const b = points[i];
-  //     cumulative.push(cumulative[i - 1] + Math.hypot(b.x - a.x, b.y - a.y));
-  //   }
-  //   const length = cumulative[cumulative.length - 1];
-  //   const dangerDistance = cumulative[(rows - 1) * 2]; // start of the last row
-
-  //   const first = points[0];
-  //   const second = points[1];
-  //   const firstLen = cumulative[1];
-  //   const ux = (second.x - first.x) / firstLen;
-  //   const uy = (second.y - first.y) / firstLen;
-
-  //   return {
-  //     length,
-  //     dangerDistance,
-  //     pointAt(distance) {
-  //       if (distance <= 0) {
-  //         return { x: first.x + ux * distance, y: first.y + uy * distance };
-  //       }
-  //       if (distance >= length) {
-  //         return { ...points[points.length - 1] };
-  //       }
-  //       let i = 1;
-  //       while (cumulative[i] < distance) i++;
-  //       const a = points[i - 1];
-  //       const b = points[i];
-  //       const t = (distance - cumulative[i - 1]) / (cumulative[i] - cumulative[i - 1]);
-  //       return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
-  //     },
-  //   };
-  // }
-
+  //========================
+  // GAME FUNCTIONS
+  //======================== 
   hitSegment(segment) {
     const centipede = segment.centipede;
     const spawned = centipede.hit(segment);
