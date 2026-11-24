@@ -7,6 +7,8 @@ export default class Mushroom {
     this.scene = scene;
     this.options = options;
     this.timer = null;
+
+    this.isPowerUp = false;
   }
 
   start() {
@@ -24,7 +26,7 @@ export default class Mushroom {
       this.timer = null;
     }
   }
-
+  
   spawn() {
     const { cell, origin, cols, rows, maxCount, count, isFree, create } = this.options;
     if (count() >= maxCount) return false;
@@ -32,6 +34,7 @@ export default class Mushroom {
     for (let i = 0; i < MAX_TRIES; i++) {
       const x = origin.x + Phaser.Math.Between(0, cols - 1) * cell;
       const y = origin.y + Phaser.Math.Between(0, rows - 1) * cell;
+
       if (isFree(x, y)) {
         create(x, y);
         return true;

@@ -16,6 +16,7 @@ export const BALL = {
   speed: 360,
   color: 0xffffff,
   maxBounceAngle: 60, // max + or - degrees from vertical when hitting paddle edge
+  count: 1,            // number of balls in play at once
 };
 
 export const CENTIPEDE = {
@@ -29,6 +30,7 @@ export const CENTIPEDE = {
 export const MUSHROOM = {
   size: 20,        // mushroom size in px
   points: 1,       // points per mushroom hit
+  color: 0x00FF00, // mushroom color - pure green
   spawnMs: 2000,   
   maxCount: 60,
 }
@@ -39,4 +41,10 @@ export const PLAYER = {
   bottomMargin: 40,   
   color: 0x4fc3f7,
   graceMs: 1000,
+};
+
+export const POWERUP = {
+  color: 0x2196f3,
+  flashMs: 200,
+  maxBalls: 8,
 };

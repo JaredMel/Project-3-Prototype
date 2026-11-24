@@ -1,14 +1,14 @@
-import { CENTIPEDE, GAME, PLAYER, MUSHROOM, BALL} from '../Breakout_consts.js';
+import { CENTIPEDE, GAME, PLAYER, MUSHROOM, BALL, POWERUP } from '../Breakout_consts.js';
 import Player from '../source/Player.js';
 import Ball from '../source/Ball.js';
 import Centipede from '../source/Centipede.js';
 import Mushroom from '../source/Mushroom.js';
 
 let winLoseConfig = {
-    //fontFamily: "arcade",
-    fontSize: "48px",
-    fill: " #ff0000",
-    align: "center",
+  //fontFamily: "arcade",
+  fontSize: "48px",
+  fill: " #ff0000",
+  align: "center",
 };
 
 const FIELD_TOP = 20;
@@ -25,7 +25,7 @@ export class Play extends Phaser.Scene {
     // Repeatedly used values
     let centerwidth = GAME.width / 2;
     let centerheight = GAME.height / 2;
-    
+
     // Let the ball leave through the bottom; every other edge bounces.
     this.physics.world.setBoundsCollision(true, true, true, true);
 
@@ -44,25 +44,22 @@ export class Play extends Phaser.Scene {
     this.segmentGroup = this.physics.add.staticGroup();
 
     // Enemy
-    this.ball = new Ball(this, GAME.width / 2, GAME.height / 4);
+    this.balls = this.add.group();
+    this.ball = this.addBall();
     this.time.delayedCall(BALL.startDelayMs, () => this.ball.launch());
 
-    this.physics.add.collider(this.ball, this.playerGroup, (ball, segment) => {
+    this.physics.add.collider(this.balls, this.playerGroup, (ball, segment) => {
       ball.bounceOff(segment);
       this.playerHit();
     });
-  
+
     // ========================
     // PHYSICS COLLISIONS
     // ========================
-    this.physics.add.collider(this.ball, this.paddle, () => {
-      this.ball.bounceOffPaddle(this.paddle);
-      this.playRandomBounce();
-    });
-    this.physics.add.collider(this.ball, this.segmentGroup, (ball, segment) => {
+    this.physics.add.collider(this.balls, this.segmentGroup, (ball, segment) => {
       this.hitSegment(segment);
     });
-    this.physics.add.collider(this.ball, this.mushroomGroup, (ball, mushroom) => {
+    this.physics.add.collider(this.balls, this.mushroomGroup, (ball, mushroom) => {
       this.hitMushroom(mushroom);
     });
 
@@ -103,17 +100,17 @@ export class Play extends Phaser.Scene {
   }
 
   // Standard Button
-    makeButton(x, y, label, onClick) {
-        const button = this.add.text(x, y, label, { fill: 'rgb(255, 0, 0)' })
-            .setFontSize(28)
-            .setOrigin(0.5)
-            .setInteractive({ useHandCursor: true })
-        button.on('pointerover', () => button.setColor('#666666')) // when not hovering
-        button.on('pointerout', () => button.setColor('#ff0000')) // when hovering
-        button.on('pointerdown', () => {this.sound.play('click', { volume: 0.5 });}) // when clicking, play sound
-        button.on('pointerdown', onClick)
-        return button
-    }
+  makeButton(x, y, label, onClick) {
+    const button = this.add.text(x, y, label, { fill: 'rgb(255, 0, 0)' })
+      .setFontSize(28)
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+    button.on('pointerover', () => button.setColor('#666666')) // when not hovering
+    button.on('pointerout', () => button.setColor('#ff0000')) // when hovering
+    button.on('pointerdown', () => { this.sound.play('click', { volume: 0.5 }); }) // when clicking, play sound
+    button.on('pointerdown', onClick)
+    return button
+  }
 
 
   //========================
@@ -140,9 +137,19 @@ export class Play extends Phaser.Scene {
     this.scoreText.setText(this.score.toString().padStart(5, '0'));
   }
 
-  createMushroom(x, y) {
+  createMushroom(x, y, randomPowerUp) {
+    // default mushroom
     const mushroom = this.add.sprite(x, y, 'mushroom');
+    mushroom.setTint(MUSHROOM.color);
+
+    // power-up mushroom
+    randomPowerUp = Phaser.Math.Between(0, 10);
+    if (randomPowerUp < 2) {
+      mushroom.setData('isPowerUp', true);
+      mushroom.setTint(POWERUP.color);
+    }
     this.mushroomGroup.add(mushroom);
+
   }
 
   isMushroomSpotFree(x, y) {
@@ -154,11 +161,17 @@ export class Play extends Phaser.Scene {
   }
 
   hitMushroom(mushroom) {
+    if (mushroom.getData('isPowerUp')) {
+      if (this.balls.getLength() < 5) {
+        this.addBall();
+        this.launchBalls();
+        this.ball.count += 1;
+      }
+    }
     const destroyed = mushroom.destroy();
     this.mushroomGroup.remove(mushroom);
 
     this.playRandomBounce();
-    // this.score += MUSHROOM.points;
     this.scoreText.setText(this.score.toString().padStart(5, '0'));
   }
 
@@ -168,12 +181,13 @@ export class Play extends Phaser.Scene {
     const cols = 29;
     let x = 10;
     let y = 30;
+    let randomPowerUp = 0;
     let map = Array.from({ length: rows }, () => Array.from({ length: cols }, () => false));
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         if (Math.random() < MUSHROOM_SPAWN_CHANCE) {
           map[r][c] = true;
-          this.createMushroom(x, y);
+          this.createMushroom(x, y, randomPowerUp);
         }
         x += 20;
       }
@@ -190,12 +204,27 @@ export class Play extends Phaser.Scene {
     }
   }
 
+  addBall() {
+    const ball = new Ball(this);
+    this.balls.add(ball);
+    return ball;
+  }
+
+  launchBalls() {
+    this.balls.getChildren().forEach((ball) => ball.launch());
+  }
+
+  spawnExtraBall(x, y) {
+    if (this.balls.getLength() >= POWERUP.maxBalls) return;
+    this.time.delayedCall(0, () => this.addBall().launchFrom(x, y));
+  }
+
   playRandomBounce() {
     const bounceSounds = ['bounce1', 'bounce2', 'bounce3', 'bounce4'];
     const randomBounce = bounceSounds[Math.floor(Math.random() * bounceSounds.length)];
     this.sound.play(randomBounce, { volume: 0.5 });
   }
-  
+
   playHit() {
     this.sound.play('hit', { volume: 0.5 });
   }

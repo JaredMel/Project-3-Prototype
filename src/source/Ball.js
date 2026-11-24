@@ -15,39 +15,11 @@ export default class Ball extends Phaser.GameObjects.Arc {
     this.launched = false;
   }
 
-  // attachTo(anchor) {
-  //   this.launched = false;
-  //   this.body.reset(
-  //     anchor.body.center.x,
-  //     anchor.y - PADDLE.height / 2 - BALL.radius - 1
-  //   );
-  // }
-
-  // follow(paddle) {
-  //   if (!this.launched) {
-  //     this.x = paddle.x;
-  //   }
-  // }
-
-  // sitOn(anchor) {
-  //   const { x, y } = anchor.ballAnchor();
-  //   this.body.reset(x + ATTACH_OFFSET_X, y - BALL.radius - 1);
-  // }
 
   launch() {
     const angle = Phaser.Math.DegToRad(Phaser.Math.Between(30, 150)); // 90 = straight down
     this.body.setVelocity(Math.cos(angle) * BALL.speed, Math.sin(angle) * BALL.speed);
   }
-
-  // bounceOffPaddle(paddle) {
-  //   const offset = paddle.hitOffset(this.x);
-  //   const angle = Phaser.Math.DegToRad(-90 + offset * BALL.maxBounceAngle);
-  //   this.body.setVelocity(Math.cos(angle) * BALL.speed, Math.sin(angle) * BALL.speed);
-  // }
-
-  // isOutOfBounds() {
-  //   return this.y - BALL.radius > GAME.height;
-  // }
 
   bounceOff(target) {
     let dx = this.x - target.x;
