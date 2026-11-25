@@ -13,6 +13,7 @@ let winLoseConfig = {
 
 const FIELD_TOP = 20;
 const MUSHROOM_SPAWN_CHANCE = 0.025; // 2.5% chance of spawning a mushroom in each cell
+const timeAmount = 120000; // 2 minutes in milliseconds
 
 export default class SampleScene extends Phaser.Scene {
   constructor() {
@@ -105,10 +106,19 @@ export default class SampleScene extends Phaser.Scene {
       create: (x, y) => this.createMushroom(x, y),
     });
     this.mushroomSpawner.start();
+
+    this.clock = this.time.delayedCall(timeAmount, () => {
+            this.physics.pause(); // time's up
+            this.winloseScreen.setVisible(true);
+            this.winText.setVisible(true);
+            this.resetButton.setVisible(true);
+        }, null, this);
   }
 
   update(time, delta) {
     this.player.update(delta);
+
+    this.scoreText.setText(Phaser.Math.CeilTo(this.clock.getRemainingSeconds()));
 
     // this.paddle.update();
     // this.ball.follow(this.paddle);
