@@ -13,7 +13,8 @@ let winLoseConfig = {
 
 const FIELD_TOP = 20;
 const MUSHROOM_SPAWN_CHANCE = 0.025; // 2.5% chance of spawning a mushroom in each cell
-const timeAmount = 120000; // 2 minutes in milliseconds
+const TIME_AMOUNT = 120000; // 2 minutes in milliseconds
+const GAME_AUTO_CORRECT_CHANCE = 0.5; // 50% chance of auto-correcting the ball's path each collision
 
 export default class SampleScene extends Phaser.Scene {
   constructor() {
@@ -79,6 +80,9 @@ export default class SampleScene extends Phaser.Scene {
     });
     this.physics.add.collider(this.ball, this.mushroomGroup, (ball, mushroom) => {
       this.hitMushroom(mushroom);
+      if (Math.random() < GAME_AUTO_CORRECT_CHANCE) {
+        this.physics.moveToObject(this.ball, this.player.head, BALL.speed);
+      }
     });
 
     this.input.on('pointerdown', () => this.ball.launch());
@@ -107,7 +111,7 @@ export default class SampleScene extends Phaser.Scene {
     });
     this.mushroomSpawner.start();
 
-    this.clock = this.time.delayedCall(timeAmount, () => {
+    this.clock = this.time.delayedCall(TIME_AMOUNT, () => {
             this.physics.pause(); // time's up
             this.winloseScreen.setVisible(true);
             this.winText.setVisible(true);
